@@ -35,6 +35,7 @@ class ExtensionWorker {
     register (extensionObject) {
         const extensionId = this.nextExtensionId++;
         this.extensions.push(extensionObject);
+
         const serviceName = `extension.${this.workerId}.${extensionId}`;
         const promise = dispatch.setService(serviceName, extensionObject)
             .then(() => dispatch.call('extensions', 'registerExtensionService', serviceName));
