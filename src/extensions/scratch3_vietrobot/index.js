@@ -58,9 +58,28 @@ const CMD_PUT_DCMOTOR = {
     ALL_PORTS_FULL_CTRL : 0x03
 };
 
+let connectedDevice = null;
+
+
+// eslint-disable-next-line func-style
+async function requestConnection() {
+    const device = await navigator.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: [0xFFE0]
+    });
+
+    const server = await device.gatt.connect();
+    const service = await server.getPrimaryService(0xFFE0); // Replace with your actual service identifier
+    console.log(service);
+    connectedDevice = await service.getCharacteristic(0xFFE1);
+    // setRequestDevice(connectedDevice);
+}
+
 class VietRobot {
 
     constructor (runtime, extensionId) {
+
+        requestConnection();
 
         /**
          * The Scratch 3.0 runtime used to trigger the green flag button.
@@ -495,7 +514,8 @@ class Scratch3VietRobotBlocks {
         return byteArray;
     }
 
-    displayingLedRGB(args) {
+    async displayingLedRGB(args) {
+        console.log(connectedDevice);
         const COLOR = args.COLOR;
         const hexstr = COLOR.substr(1, 6);
         const bytes = this.hexStringToByteArray(hexstr);
@@ -510,11 +530,14 @@ class Scratch3VietRobotBlocks {
         );
         console.log(typeof cmd);
         console.log(cmd);
+        const uint8Array = new Uint8Array(cmd);
+        console.log(uint8Array);
+        await connectedDevice.writeValue(uint8Array);
         this._peripheral.send(cmd);
         // const result = Atomics.waitAsync(notifyFlags, 0, 1, 2000).then();
     }
 
-    motorSetPower(args) {
+    async motorSetPower(args) {
         const PORT = Cast.toNumber(args.PORT);
         const POWER = Cast.toNumber(args.POWER);
 
@@ -527,10 +550,13 @@ class Scratch3VietRobotBlocks {
             ]
         );
         console.log(cmd);
+        const uint8Array = new Uint8Array(cmd);
+        console.log(uint8Array);
+        await connectedDevice.writeValue(uint8Array);
         this._peripheral.send(cmd);
     }
 
-    motorSetOrientation(args) {
+    async motorSetOrientation(args) {
         const PORT      = Cast.toNumber(args.PORT);
         let ORIENTATION = 0x00;
 
@@ -551,10 +577,13 @@ class Scratch3VietRobotBlocks {
             ]
         );
         console.log(cmd);
+        const uint8Array = new Uint8Array(cmd);
+        console.log(uint8Array);
+        await connectedDevice.writeValue(uint8Array);
         this._peripheral.send(cmd);
     }
 
-    motorFullControl(args) {
+    async motorFullControl(args) {
         const PORT      = Cast.toNumber(args.PORT);
         const POWER     = Cast.toNumber(args.POWER);
         let ORIENTATION = 0x00;
@@ -577,10 +606,13 @@ class Scratch3VietRobotBlocks {
             ]
         );
         console.log(cmd);
+        const uint8Array = new Uint8Array(cmd);
+        console.log(uint8Array);
+        await connectedDevice.writeValue(uint8Array);
         this._peripheral.send(cmd);
     }
 
-    ledTrafficCmd(args) {
+    async ledTrafficCmd(args) {
         const PORT = Cast.toNumber(args.PORT);
         const LEDS_ = [args.GREEN, args.YELLOW, args.RED];
         let led_state_ = [];
@@ -608,10 +640,13 @@ class Scratch3VietRobotBlocks {
             )
         );
         console.log(cmd);
+        const uint8Array = new Uint8Array(cmd);
+        console.log(uint8Array);
+        await connectedDevice.writeValue(uint8Array);
         this._peripheral.send(cmd);
     }
 
-    servoAngle(args) {
+    async servoAngle(args) {
         const PORT = Cast.toNumber(args.PORT);
         const params = [args.ANGLE_1, args.ANGLE_2, args.ANGLE_3];
         console.log(params);
@@ -628,11 +663,14 @@ class Scratch3VietRobotBlocks {
             [ PORT ].concat(vals)
         );
         //console.log(cmd);
+        const uint8Array = new Uint8Array(cmd);
+        console.log(uint8Array);
+        await connectedDevice.writeValue(uint8Array);
         this._peripheral.send(cmd);
 
     }
 
-    buttonPressed(args) {
+    async buttonPressed(args) {
         const PORT = Cast.toNumber(args.PORT);
         const cmd = this._peripheral.generateCommand(
             MSG_CMD_ID.GET_BUTTON_STATE,
@@ -640,7 +678,13 @@ class Scratch3VietRobotBlocks {
         );
 
         console.log(cmd);
+
+        const uint8Array = new Uint8Array(cmd);
+        console.log(uint8Array);
+        await connectedDevice.writeValue(uint8Array);
+
         this._peripheral.send(cmd);
+        console.log(connectedDevice.readValue());
         // Wait 100ms to check the value
     }
 
